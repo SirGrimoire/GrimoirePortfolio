@@ -113,4 +113,5 @@ footer{padding-block:64px 40px;text-align:center;color:var(--soft);font-size:.9r
 .blob.on{opacity:1}
 @media (max-width:560px){.hint{display:none}}
 .ring{touch-action:none}
-/* end of styles.css v5 */
+section.wrap.hero{padding-top:0}
+/* end of styles.css v6 */

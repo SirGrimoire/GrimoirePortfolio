@@ -1,4 +1,5 @@
 (() => {
+  console.info("portfolio v6");
   const $ = (s) => document.querySelector(s);
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const fine = matchMedia("(pointer: fine)").matches;
@@ -105,7 +106,8 @@ void main(){
     const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); return s; };
     const prog = gl.createProgram();
     gl.attachShader(prog, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(prog);
-    if (gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) console.warn("Shader failed:", gl.getProgramInfoLog(prog));
+    else {
       gl.useProgram(prog);
       gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
       gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
