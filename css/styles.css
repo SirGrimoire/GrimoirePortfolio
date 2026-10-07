@@ -86,3 +86,11 @@ footer{padding-block:64px 40px;text-align:center;color:var(--soft);font-size:.9r
 }
 @media (max-width:760px){.about{grid-template-columns:1fr}.pill a{padding:8px 12px}.chip small{display:none}.card{position:relative;top:0;margin-bottom:20px}}
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation:none!important}}
+
+.skills{margin:0;padding:8px 28px}
+.skills>div{display:grid;grid-template-columns:200px 1fr;gap:16px;padding:22px 0;border-bottom:1px solid var(--line);align-items:start}
+.skills>div:last-child{border:0}.skills dt{color:var(--soft)}.skills dd{margin:0}.skills .tags{margin:0}
+.skills .hot li{background:color-mix(in oklch,#C77DA3 45%,transparent);font-weight:500}
+.contact .alt{margin:22px auto 0;color:var(--ink)}.contact .alt a{text-underline-offset:4px}
+@media (max-width:760px){.skills>div{grid-template-columns:1fr;gap:8px}}
+@supports (animation-timeline:scroll()){.skills{animation:fade linear both;animation-timeline:view();animation-range:entry 0% entry 55%}}
