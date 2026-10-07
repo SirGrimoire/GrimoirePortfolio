@@ -21,6 +21,7 @@
   const pos = [[.80, .22], [.58, .55], [.88, .72], [.30, .28]];
   const mouse = { x: .5, y: .5, tx: .5, ty: .5, cx: 0, cy: 0, in: false };
   const rip = { x: .5, y: .5, t0: -99 };
+  let visible = true, running = false, ready = false;
 
   const spots = pos.map(([x, y], i) => {
     const el = document.createElement("div");
@@ -90,7 +91,7 @@ void main(){
   float asp=r.x/r.y;vec2 A=vec2(asp,1.);vec2 uv=gl_FragCoord.xy/r;uv.y=1.-uv.y;vec2 q=uv*A;
   vec2 pm=q-m*A;q+=pm*.10*exp(-dot(pm,pm)*9.);
   float rr=t-rp.z;vec2 pr=q-rp.xy*A;float dr=length(pr);
-  float env=exp(-rr*1.8)*exp(-pow(dr-rr*.55,2.)*60.);
+  float env=exp(-rr*1.8)*exp(-(dr-rr*.55)*(dr-rr*.55)*60.);
   q+=normalize(pr+1e-4)*.06*sin((dr-rr*.55)*30.)*env;
   for(int i=0;i<3;i++){q+=.12*vec2(sin(q.y*3.+t*.5+float(i)*1.7),cos(q.x*3.+t*.4+float(i)*2.3));}
   vec3 col=vec3(0.);float ws=0.;
@@ -124,7 +125,6 @@ void main(){
   if (!draw) stage.classList.add("nogl");
 
   // Main loop: runs while the hero is visible; in reduced-motion mode it only redraws on input.
-  let visible = true, running = false;
   const frame = (t) => {
     const w = stage.clientWidth, h = stage.clientHeight, k = reduce ? 1 : .07;
     mouse.x += (mouse.tx - mouse.x) * k; mouse.y += (mouse.ty - mouse.y) * k;
@@ -149,9 +149,10 @@ void main(){
     running = false;
     if (!reduce && visible) wake();
   };
-  function wake() { if (!running) { running = true; requestAnimationFrame(frame); } }
+  function wake() { if (ready && !running) { running = true; requestAnimationFrame(frame); } }
   new IntersectionObserver(([e]) => { visible = e.isIntersecting; if (visible) wake(); }).observe(stage);
   addEventListener("resize", wake);
+  ready = true;
   wake();
 
   // Frosted-glass cursor blob: trails the pointer, stretches with speed, wraps links and buttons.
@@ -160,6 +161,7 @@ void main(){
     blob.className = "blob"; blob.setAttribute("aria-hidden", "true"); document.body.append(blob);
     const B = { x: 0, y: 0, w: 38, h: 38, r: 19, px: 0, py: 0, tx: 0, ty: 0, el: null };
     addEventListener("pointermove", (e) => {
+      if (!blob.classList.contains("on")) { B.x = e.clientX; B.y = e.clientY; }
       B.px = e.clientX; B.py = e.clientY; blob.classList.add("on");
       B.el = e.target.closest ? e.target.closest("a,button,.card") : null;
     });
