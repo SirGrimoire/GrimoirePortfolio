@@ -75,22 +75,32 @@ h2{font:400 clamp(2.3rem,5vw,3.6rem)/1.05 var(--serif);margin:0 0 32px;text-wrap
 .btn:hover{background:#fff}
 footer{padding-block:64px 40px;text-align:center;color:var(--soft);font-size:.9rem}
 
+/* skills bento + contact */
+.bento{display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:16px}
+.bento .glass{padding:clamp(22px,3vw,34px)}
+.bento h3{font:400 1.7rem/1.1 var(--serif);margin:0 0 18px}
+.bento .tags{margin:0}.bento .tags li{font-size:.95rem;padding:7px 16px}
+.focus{grid-row:span 2;display:flex;flex-direction:column;justify-content:space-between;min-height:300px;overflow:hidden;
+  background:radial-gradient(90% 90% at 90% 0%,#C77DA380,transparent 65%),radial-gradient(80% 80% at 0% 100%,#4F7CAC99,transparent 70%),var(--glass)}
+.focus .label{color:#ffffffcc}
+.focus .big{font:400 clamp(3.4rem,8vw,6rem)/.95 var(--serif);margin:0}
+.prog{grid-column:span 2}.diploma{grid-column:1/-1}
+.diploma p{margin:0;font-size:1.1rem;color:var(--soft);max-width:70ch}
+.contact .alt{display:flex;flex-direction:column;align-items:center;gap:8px;margin:36px auto 0;color:var(--ink)}
+.contact .alt a{text-decoration:none;border-bottom:1px solid var(--line);transition:border-color .3s}
+.contact .alt a:hover{border-color:#fff}
+@media (max-width:760px){.bento{grid-template-columns:1fr}.focus{grid-row:auto;min-height:220px}.prog,.diploma{grid-column:auto}}
+
 /* scroll-driven motion (progressive enhancement) */
 @supports (animation-timeline:scroll()){
   .hero-copy{animation:away linear both;animation-timeline:scroll(root);animation-range:0 70svh}
   @keyframes away{to{opacity:0;translate:0 -60px;filter:blur(14px);scale:.96}}
   .card{animation:enter linear both;animation-timeline:view();animation-range:entry 0% entry 70%}
   @keyframes enter{from{opacity:0;translate:0 90px;scale:.94;rotate:1.5deg}}
-  h2,.about p,.facts,.contact{animation:fade linear both;animation-timeline:view();animation-range:entry 0% entry 55%}
+  h2,.about p,.facts,.contact,.bento .glass{animation:fade linear both;animation-timeline:view();animation-range:entry 0% entry 55%}
   @keyframes fade{from{opacity:0;translate:0 40px;filter:blur(8px)}}
 }
 @media (max-width:760px){.about{grid-template-columns:1fr}.pill a{padding:8px 12px}.chip small{display:none}.card{position:relative;top:0;margin-bottom:20px}}
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation:none!important}}
 
-.skills{margin:0;padding:8px 28px}
-.skills>div{display:grid;grid-template-columns:200px 1fr;gap:16px;padding:22px 0;border-bottom:1px solid var(--line);align-items:start}
-.skills>div:last-child{border:0}.skills dt{color:var(--soft)}.skills dd{margin:0}.skills .tags{margin:0}
-.skills .hot li{background:color-mix(in oklch,#C77DA3 45%,transparent);font-weight:500}
-.contact .alt{margin:22px auto 0;color:var(--ink)}.contact .alt a{text-underline-offset:4px}
-@media (max-width:760px){.skills>div{grid-template-columns:1fr;gap:8px}}
-@supports (animation-timeline:scroll()){.skills{animation:fade linear both;animation-timeline:view();animation-range:entry 0% entry 55%}}
+/* end of styles.css v3 */
