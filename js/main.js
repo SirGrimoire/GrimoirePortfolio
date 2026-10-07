@@ -1,5 +1,5 @@
 (() => {
-  console.info("portfolio v6");
+  console.info("portfolio v7");
   const $ = (s) => document.querySelector(s);
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const fine = matchMedia("(pointer: fine)").matches;
@@ -23,6 +23,22 @@
   const mouse = { x: .5, y: .5, tx: .5, ty: .5, cx: 0, cy: 0, in: false };
   const rip = { x: .5, y: .5, t0: -99 };
   let visible = true, running = false, ready = false;
+
+  // Light / dark theme: follows the system until the visitor picks one; the hero shader blends to the matching base colour.
+  const root = document.documentElement, toggle = $("#theme"), mq = matchMedia("(prefers-color-scheme: light)");
+  let baseCol = [.078, .063, .102], baseTarget = baseCol.slice();
+  const isLight = () => (root.dataset.theme ? root.dataset.theme === "light" : mq.matches);
+  const applyTheme = (instant) => {
+    baseTarget = isLight() ? [.93, .90, .94] : [.078, .063, .102]; if (instant) baseCol = baseTarget.slice();
+    toggle.dataset.mode = isLight() ? "light" : "dark"; toggle.setAttribute("aria-label", isLight() ? "Switch to dark mode" : "Switch to light mode"); wake();
+  };
+  toggle.addEventListener("click", () => {
+    const next = isLight() ? "dark" : "light"; root.dataset.theme = next;
+    try { localStorage.setItem("theme", next); } catch (e) {}
+    applyTheme();
+  });
+  mq.addEventListener("change", () => applyTheme());
+  applyTheme(true);
 
   const spots = pos.map(([x, y], i) => {
     const el = document.createElement("div");
@@ -86,7 +102,7 @@ precision highp float;
 #else
 precision mediump float;
 #endif
-uniform vec2 r,m,p[4];uniform vec3 c[4],rp;uniform float t;
+uniform vec2 r,m,p[4];uniform vec3 c[4],rp,base;uniform float t;
 float h(vec2 x){return fract(sin(dot(x,vec2(12.9898,78.233)))*43758.5453);}
 void main(){
   float asp=r.x/r.y;vec2 A=vec2(asp,1.);vec2 uv=gl_FragCoord.xy/r;uv.y=1.-uv.y;vec2 q=uv*A;
@@ -97,9 +113,9 @@ void main(){
   for(int i=0;i<3;i++){q+=.12*vec2(sin(q.y*3.+t*.5+float(i)*1.7),cos(q.x*3.+t*.4+float(i)*2.3));}
   vec3 col=vec3(0.);float ws=0.;
   for(int i=0;i<4;i++){float d=length(q-p[i]*A);float w=exp(-d*d*5.5);col+=c[i]*w;ws+=w;}
-  col/=ws+.12;
+  col=(col+base*.12)/(ws+.12);
   col+=.07*exp(-length(uv*A-m*A)*3.)+.12*env;
-  col*=1.-.4*smoothstep(.4,1.,uv.y);
+  col=mix(col,base,.45*smoothstep(.4,1.,uv.y));
   col+=(h(gl_FragCoord.xy+fract(t))-.5)*.05;
   gl_FragColor=vec4(col,1.);
 }`;
@@ -112,12 +128,12 @@ void main(){
       gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
       gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
       const a = gl.getAttribLocation(prog, "a"); gl.enableVertexAttribArray(a); gl.vertexAttribPointer(a, 2, gl.FLOAT, false, 0, 0);
-      const U = (n) => gl.getUniformLocation(prog, n), uR = U("r"), uM = U("m"), uT = U("t"), uP = U("p[0]"), uC = U("c[0]"), uRP = U("rp");
+      const U = (n) => gl.getUniformLocation(prog, n), uR = U("r"), uM = U("m"), uT = U("t"), uP = U("p[0]"), uC = U("c[0]"), uRP = U("rp"), uB = U("base");
       draw = (t) => {
         const scale = Math.min(devicePixelRatio || 1, 1.5) * .6;
         const w = Math.round(canvas.clientWidth * scale), h = Math.round(canvas.clientHeight * scale);
         if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; gl.viewport(0, 0, w, h); }
-        gl.uniform2f(uR, w, h); gl.uniform2f(uM, mouse.x, mouse.y); gl.uniform1f(uT, (t / 1000) % 600); gl.uniform3f(uRP, rip.x, rip.y, rip.t0);
+        gl.uniform2f(uR, w, h); gl.uniform2f(uM, mouse.x, mouse.y); gl.uniform1f(uT, (t / 1000) % 600); gl.uniform3f(uRP, rip.x, rip.y, rip.t0); gl.uniform3f(uB, baseCol[0], baseCol[1], baseCol[2]);
         gl.uniform2fv(uP, new Float32Array(spots.flatMap((s) => [s.cx, s.cy])));
         gl.uniform3fv(uC, new Float32Array(spots.flatMap((s) => s.col)));
         gl.drawArrays(gl.TRIANGLES, 0, 3);
@@ -129,6 +145,7 @@ void main(){
   // Main loop: runs while the hero is visible; in reduced-motion mode it only redraws on input.
   const frame = (t) => {
     const w = stage.clientWidth, h = stage.clientHeight, k = reduce ? 1 : .07;
+    baseCol = baseCol.map((v, i) => v + (baseTarget[i] - v) * (reduce ? 1 : .08));
     mouse.x += (mouse.tx - mouse.x) * k; mouse.y += (mouse.ty - mouse.y) * k;
     spots.forEach((s) => {
       const dx = reduce ? 0 : Math.sin(t * .0004 + s.i * 2.1) * .035, dy = reduce ? 0 : Math.cos(t * .00035 + s.i * 1.7) * .035;
@@ -191,5 +208,26 @@ void main(){
     b.addEventListener("pointermove", (e) => { const r = b.getBoundingClientRect(); b.style.translate = `${(e.clientX - r.left - r.width / 2) * .25}px ${(e.clientY - r.top - r.height / 2) * .35}px`; });
     b.addEventListener("pointerleave", () => { b.style.translate = ""; });
     b.style.transition = "translate .4s cubic-bezier(.2,.8,.2,1), background .3s";
+  });
+
+  // Contact form: posts to Formspree once YOUR_FORM_ID is replaced; until then it opens the visitor's email app.
+  const form = $("#cf");
+  if (form) form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const status = form.querySelector(".status"), btn = form.querySelector(".btn");
+    if (!form.checkValidity()) { form.reportValidity(); return; }
+    const data = new FormData(form);
+    if (form.action.includes("YOUR_FORM_ID")) {
+      const to = ["inderpreetsingh4747", "gmail.com"].join("@");
+      location.href = `mailto:${to}?subject=${encodeURIComponent("Portfolio message from " + data.get("name"))}&body=${encodeURIComponent(data.get("message") + "\n\n" + data.get("name") + " (" + data.get("email") + ")")}`;
+      status.textContent = "Opening your email app..."; return;
+    }
+    btn.disabled = true; status.textContent = "Sending...";
+    try {
+      const res = await fetch(form.action, { method: "POST", body: data, headers: { Accept: "application/json" } });
+      if (res.ok) { form.reset(); status.textContent = "Thanks, your message was sent."; }
+      else status.textContent = "Something went wrong. Please try again in a moment.";
+    } catch (err) { status.textContent = "Couldn't send. Check your connection and try again."; }
+    btn.disabled = false;
   });
 })();
